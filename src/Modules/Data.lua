@@ -125,6 +125,18 @@ local function applyLocalizedGemData(gem, localizedGem)
 	end
 end
 
+local function applyLocalizedItemBaseData(base, localizedBase)
+	if not localizedBase then
+		return
+	end
+	if localizedBase.name and localizedBase.name ~= "" then
+		base.displayName = sanitiseText(localizedBase.name)
+	end
+	if localizedBase.flavourText then
+		base.displayFlavourText = copyTable(localizedBase.flavourText, true)
+	end
+end
+
 -----------------
 -- Common Data --
 -----------------
@@ -1105,6 +1117,12 @@ data.itemBases = { }
 for _, type in pairs(itemTypes) do
 	LoadModule("Data/Bases/"..type, data.itemBases)
 end
+local localizedItemBases = gameLocalize:GetOverlay("ItemBases")
+for name, base in pairs(data.itemBases) do
+	applyLocalizedItemBaseData(base, localizedItemBases and localizedItemBases[name])
+end
+data.localizedModLineMap = gameLocalize:GetOverlay("ModLineMap") or nil
+data.uniqueItemLocalisation = gameLocalize:GetOverlay("UniqueItems") or { }
 
 -- Build lists of item bases, separated by type
 data.itemBaseLists = { }
@@ -1115,7 +1133,11 @@ for name, base in pairs(data.itemBases) do
 			type = type .. ": " .. base.subType
 		end
 		data.itemBaseLists[type] = data.itemBaseLists[type] or { }
-		table.insert(data.itemBaseLists[type], { label = name:gsub(" %(.+%)",""), name = name, base = base })
+		table.insert(data.itemBaseLists[type], {
+			label = (base.displayName or name):gsub(" %(.+%)",""),
+			name = name,
+			base = base,
+		})
 	end
 end
 data.itemBaseTypeList = { }

@@ -9,6 +9,9 @@ The official Spanish pipeline currently supports:
 * stat descriptions from `Metadata/StatDescriptions/*.txt`
 * skill names and descriptions
 * gem names, base type names, secondary effect names, and tag strings
+* item base names and base flavour text
+* unique item names and unique flavour text
+* item modifier tooltip lines rendered from official modifier text
 
 These are loaded as display-only overlays. Internal keys stay in English so build import, matching, and other game logic keep working.
 
@@ -26,6 +29,9 @@ Official Spanish game content is expected in:
 
 * `src/Data/Locales/es/Skills.lua`
 * `src/Data/Locales/es/Gems.lua`
+* `src/Data/Locales/es/ItemBases.lua`
+* `src/Data/Locales/es/ModLineMap.lua`
+* `src/Data/Locales/es/UniqueItems.lua`
 
 The stat description files remain in `src/Data/StatDescriptions/`, but now preserve all language blocks exported from the client so runtime can select Spanish descriptions directly.
 
@@ -53,13 +59,19 @@ POB_ONLY_LOCALE_EXPORT=1
 2. Open a valid Path of Exile data source.
 3. Run `statdesc`.
 4. Run `skills`.
+5. Run `bases`.
+6. Run `mods`.
+7. Run `uniqueItems`.
 
 After that you should have:
 
 * `src/Data/Locales/es/Skills.lua`
 * `src/Data/Locales/es/Gems.lua`
+* `src/Data/Locales/es/ItemBases.lua`
+* `src/Data/Locales/es/ModLineMap.lua`
+* `src/Data/Locales/es/UniqueItems.lua`
 * refreshed `src/Data/StatDescriptions/*.lua` with preserved `lang` blocks
 
 ## Important limitation
 
-This does not yet fully localise every PoB-specific UI string or every internal game-facing text source such as item base names and uniques. Those areas need separate work because many PoB systems still key off English names internally.
+PoB still keeps internal identifiers in English. The Spanish overlays are display-only by design so imports, build logic, and item parsing continue to work against the original English keys.

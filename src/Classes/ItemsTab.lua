@@ -3888,6 +3888,11 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 	local fontSizeSmall = main.showFlavourText and 16 or 14
 	local fontSizeBig = main.showFlavourText and 18 or 16
 	local fontSizeTitle = main.showFlavourText and 22 or 20
+	local tooltipBaseName = itemLib.getDisplayBaseName(item) or item.baseName or ""
+	local tooltipTitle = itemLib.getDisplayTitle(item)
+	local function tt(key, fallback)
+		return tr("item.tooltip."..key, fallback)
+	end
 	local rarityCode = colorCodes[item.rarity]
 	tooltip.maxWidth = m_min(maxWidth or 600, 600) -- Cap very long lines. Can use a narrower width for small viewports
 	tooltip.tooltipHeader = item.rarity
@@ -3896,11 +3901,11 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 	tooltip.color = rarityCode
 	self:SetTooltipHeaderInfluence(tooltip, item)
 	-- Item name
-	if item.title then
-		tooltip:AddLine(fontSizeTitle, rarityCode..item.title, "FONTIN SC")
-		tooltip:AddLine(fontSizeTitle, rarityCode..item.baseName:gsub(" %(.+%)",""),"FONTIN SC")
+	if tooltipTitle then
+		tooltip:AddLine(fontSizeTitle, rarityCode..tooltipTitle, "FONTIN SC")
+		tooltip:AddLine(fontSizeTitle, rarityCode..tooltipBaseName:gsub(" %(.+%)",""),"FONTIN SC")
 	else
-		tooltip:AddLine(fontSizeTitle, rarityCode..item.namePrefix..item.baseName:gsub(" %(.+%)","")..item.nameSuffix, "FONTIN SC")
+		tooltip:AddLine(fontSizeTitle, rarityCode..item.namePrefix..tooltipBaseName:gsub(" %(.+%)","")..item.nameSuffix, "FONTIN SC")
 	end
 	for _, curInfluenceInfo in ipairs(influenceInfo) do
 		if item[curInfluenceInfo.key] and not main.showFlavourText then
@@ -3919,19 +3924,19 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 	if dbMode then
 		if item.variantList then
 			if #item.variantList == 1 then
-				tooltip:AddLine(fontSizeBig, "^xFFFF30Variant: "..item.variantList[1], "FONTIN SC")
+				tooltip:AddLine(fontSizeBig, "^xFFFF30"..tt("variant", "Variant")..": "..item.variantList[1], "FONTIN SC")
 			else
-				tooltip:AddLine(fontSizeBig, "^xFFFF30Variant: "..item.variantList[item.variant].." ("..#item.variantList.." variants)", "FONTIN SC")
+				tooltip:AddLine(fontSizeBig, "^xFFFF30"..tt("variant", "Variant")..": "..item.variantList[item.variant].." ("..#item.variantList.." "..tt("variants", "variants")..")", "FONTIN SC")
 			end
 		end
 		if item.league then
-			tooltip:AddLine(fontSizeBig, "^xFF5555Exclusive to: "..item.league, "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, "^xFF5555"..tt("exclusive_to", "Exclusive to")..": "..item.league, "FONTIN SC")
 		end
 		if item.unreleased then
-			tooltip:AddLine(fontSizeBig, colorCodes.NEGATIVE.."Not yet available", "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, colorCodes.NEGATIVE..tt("not_yet_available", "Not yet available"), "FONTIN SC")
 		end
 		if item.source then
-			tooltip:AddLine(fontSizeBig, colorCodes.SOURCE.."Source: "..self:FormatItemSource(item.source), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, colorCodes.SOURCE..tt("source", "Source")..": "..self:FormatItemSource(item.source), "FONTIN SC")
 		end
 		if item.upgradePaths then
 			for _, path in ipairs(item.upgradePaths) do
@@ -3949,57 +3954,57 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 		local weaponData = item.weaponData[slotNum]
 		tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s", self.build.data.weaponTypeInfo[base.type].label or base.subType or base.type), "FONTIN SC")
 		if item.quality > 0 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FQuality: "..colorCodes.MAGIC.."+%d%%", item.quality), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: "..colorCodes.MAGIC.."+%d%%", tt("quality", "Quality"), item.quality), "FONTIN SC")
 		end
 		local totalDamageTypes = 0
 		if weaponData.PhysicalDPS then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FPhysical Damage: "..colorCodes.MAGIC.."%d-%d (%.1f DPS)", weaponData.PhysicalMin, weaponData.PhysicalMax, weaponData.PhysicalDPS), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: "..colorCodes.MAGIC.."%d-%d (%.1f DPS)", tt("physical_damage", "Physical Damage"), weaponData.PhysicalMin, weaponData.PhysicalMax, weaponData.PhysicalDPS), "FONTIN SC")
 			totalDamageTypes = totalDamageTypes + 1
 		end
 		if weaponData.ElementalDPS then
 			local elemLine
 			for _, var in ipairs({"Fire","Cold","Lightning"}) do
 				if weaponData[var.."DPS"] then
-					elemLine = elemLine and elemLine.."^x7F7F7F, " or "^x7F7F7FElemental Damage: "
+					elemLine = elemLine and elemLine.."^x7F7F7F, " or "^x7F7F7F"..tt("elemental_damage", "Elemental Damage")..": "
 					elemLine = elemLine..s_format("%s%d-%d", colorCodes[var:upper()], weaponData[var.."Min"], weaponData[var.."Max"])
 				end
 			end
 			tooltip:AddLine(fontSizeBig, elemLine, "FONTIN SC")
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FElemental DPS: "..colorCodes.MAGIC.."%.1f", weaponData.ElementalDPS), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: "..colorCodes.MAGIC.."%.1f", tt("elemental_dps", "Elemental DPS"), weaponData.ElementalDPS), "FONTIN SC")
 			totalDamageTypes = totalDamageTypes + 1	
 		end
 		if weaponData.ChaosDPS then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FChaos Damage: "..colorCodes.CHAOS.."%d-%d "..colorCodes.MAGIC.."(%.1f DPS)", weaponData.ChaosMin, weaponData.ChaosMax, weaponData.ChaosDPS), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: "..colorCodes.CHAOS.."%d-%d "..colorCodes.MAGIC.."(%.1f DPS)", tt("chaos_damage", "Chaos Damage"), weaponData.ChaosMin, weaponData.ChaosMax, weaponData.ChaosDPS), "FONTIN SC")
 			totalDamageTypes = totalDamageTypes + 1
 		end
 		if totalDamageTypes > 1 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FTotal DPS: "..colorCodes.MAGIC.."%.1f", weaponData.TotalDPS), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: "..colorCodes.MAGIC.."%.1f", tt("total_dps", "Total DPS"), weaponData.TotalDPS), "FONTIN SC")
 		end
-		tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FCritical Strike Chance: %s%.2f%%", main:StatColor(weaponData.CritChance, base.weapon.CritChanceBase), weaponData.CritChance), "FONTIN SC")
-		tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FAttacks per Second: %s%.2f", main:StatColor(weaponData.AttackRate, base.weapon.AttackRateBase), weaponData.AttackRate), "FONTIN SC")
+		tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%.2f%%", tt("critical_strike_chance", "Critical Strike Chance"), main:StatColor(weaponData.CritChance, base.weapon.CritChanceBase), weaponData.CritChance), "FONTIN SC")
+		tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%.2f", tt("attacks_per_second", "Attacks per Second"), main:StatColor(weaponData.AttackRate, base.weapon.AttackRateBase), weaponData.AttackRate), "FONTIN SC")
 		if weaponData.range < 120 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FWeapon Range: %s%.1f ^x7F7F7Fmetres", main:StatColor(weaponData.range, base.weapon.Range), weaponData.range / 10), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%.1f ^x7F7F7F%s", tt("weapon_range", "Weapon Range"), main:StatColor(weaponData.range, base.weapon.Range), weaponData.range / 10, tt("metres", "metres")), "FONTIN SC")
 		end
 	elseif base.armour then
 		-- Armour-specific info
 		local armourData = item.armourData
 		if item.quality > 0 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FQuality: "..colorCodes.MAGIC.."+%d%%", item.quality), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: "..colorCodes.MAGIC.."+%d%%", tt("quality", "Quality"), item.quality), "FONTIN SC")
 		end
 		if base.armour.BlockChance and armourData.BlockChance > 0 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FChance to Block: %s%d%%", main:StatColor(armourData.BlockChance, base.armour.BlockChance), armourData.BlockChance), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%d%%", tt("chance_to_block", "Chance to Block"), main:StatColor(armourData.BlockChance, base.armour.BlockChance), armourData.BlockChance), "FONTIN SC")
 		end
 		if armourData.Armour > 0 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FArmour: %s%d", main:StatColor(armourData.Armour, base.armour.ArmourBase), armourData.Armour), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%d", tt("armour", "Armour"), main:StatColor(armourData.Armour, base.armour.ArmourBase), armourData.Armour), "FONTIN SC")
 		end
 		if armourData.Evasion > 0 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FEvasion Rating: %s%d", main:StatColor(armourData.Evasion, base.armour.EvasionBase), armourData.Evasion), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%d", tt("evasion_rating", "Evasion Rating"), main:StatColor(armourData.Evasion, base.armour.EvasionBase), armourData.Evasion), "FONTIN SC")
 		end
 		if armourData.EnergyShield > 0 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FEnergy Shield: %s%d", main:StatColor(armourData.EnergyShield, base.armour.EnergyShieldBase), armourData.EnergyShield), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%d", tt("energy_shield", "Energy Shield"), main:StatColor(armourData.EnergyShield, base.armour.EnergyShieldBase), armourData.EnergyShield), "FONTIN SC")
 		end
 		if armourData.Ward > 0 then
-			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7FWard: %s%d", main:StatColor(armourData.Ward, base.armour.WardBase), armourData.Ward), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, s_format("^x7F7F7F%s: %s%d", tt("ward", "Ward"), main:StatColor(armourData.Ward, base.armour.WardBase), armourData.Ward), "FONTIN SC")
 		end
 	elseif base.flask then
 		-- Flask-specific info
@@ -4067,13 +4072,13 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 	elseif item.type == "Jewel" then
 		-- Jewel-specific info
 		if item.limit then
-			tooltip:AddLine(fontSizeBig, "^x7F7F7FLimited to: ^7"..item.limit, "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, "^x7F7F7F"..tt("limited_to", "Limited to")..": ^7"..item.limit, "FONTIN SC")
 		end
 		if item.classRestriction then
-			tooltip:AddLine(fontSizeBig, "^x7F7F7FRequires Class "..(self.build.spec.curClassName == item.classRestriction and colorCodes.POSITIVE or colorCodes.NEGATIVE)..item.classRestriction, "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, "^x7F7F7F"..tt("requires_class", "Requires Class").." "..(self.build.spec.curClassName == item.classRestriction and colorCodes.POSITIVE or colorCodes.NEGATIVE)..item.classRestriction, "FONTIN SC")
 		end
 		if item.jewelRadiusLabel then
-			tooltip:AddLine(fontSizeBig, "^x7F7F7FRadius: ^7"..item.jewelRadiusLabel, "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, "^x7F7F7F"..tt("radius", "Radius")..": ^7"..item.jewelRadiusLabel, "FONTIN SC")
 		end
 		if item.jewelRadiusData and slot and item.jewelRadiusData[slot.nodeId] then
 			local radiusData = item.jewelRadiusData[slot.nodeId]
@@ -4122,12 +4127,12 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 			end
 			line = line .. code .. socket.color
 		end
-		tooltip:AddLine(fontSizeBig, "^x7F7F7FSockets: "..line, "FONTIN SC")
+		tooltip:AddLine(fontSizeBig, "^x7F7F7F"..tt("sockets", "Sockets")..": "..line, "FONTIN SC")
 	end
 	tooltip:AddSeparator(10)
 
 	if item.talismanTier then
-		tooltip:AddLine(fontSizeBig, "^x7F7F7FTalisman Tier ^xFFFFFF"..item.talismanTier, "FONTIN SC")
+		tooltip:AddLine(fontSizeBig, "^x7F7F7F"..tt("talisman_tier", "Talisman Tier").." ^xFFFFFF"..item.talismanTier, "FONTIN SC")
 		tooltip:AddSeparator(10)
 	end
 
@@ -4194,8 +4199,13 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 	if (item.rarity == "UNIQUE" or item.rarity == "RELIC" or item.base.flavourText) and main.showFlavourText then
 		local flavour = nil
 		local flavourTable = nil
+		local localizedUnique = item.title and data.uniqueItemLocalisation[item.title:gsub("^Foulborn%s+", "")]
 
-		if item.base.flavourText then
+		if localizedUnique and localizedUnique.text then
+			flavourTable = localizedUnique.text
+		elseif item.base.displayFlavourText then
+			flavour = item.base.displayFlavourText
+		elseif item.base.flavourText then
 			flavour = item.base.flavourText
 		else
 			flavourTable = flavourLookup[item.title:gsub("^Foulborn%s+", "")]
@@ -4239,9 +4249,13 @@ function ItemsTabClass:AddItemTooltip(tooltip, item, slot, dbMode, maxWidth)
 					flavour = flavourTable[selectedFlavourId]
 				end
 			else
-				for _, text in pairs(flavourTable) do
-					flavour = text
-					break
+				if flavourTable[1] then
+					flavour = flavourTable
+				else
+					for _, text in pairs(flavourTable) do
+						flavour = text
+						break
+					end
 				end
 			end
 		end

@@ -1101,6 +1101,10 @@ function ItemClass:ParseRaw(raw, rarity, highQuality)
 			self:NormaliseQuality()
 		end
 	end
+	self.displayBaseName = self.base and self.base.displayName or self.baseName
+	if self.title and data.uniqueItemLocalisation and data.uniqueItemLocalisation[self.title] then
+		self.displayTitle = sanitiseText(data.uniqueItemLocalisation[self.title].name)
+	end
 	self:BuildModList()
 	if deferJewelRadiusIndexAssignment then
 		self.jewelRadiusIndex = self.jewelData.radiusIndex

@@ -1900,7 +1900,7 @@ do
 		end
 		if req[1] then
 			local fontSizeBig = main.showFlavourText and 18 or 16
-			tooltip:AddLine(fontSizeBig, "^x7F7F7FRequires "..table.concat(req, "^x7F7F7F, "), "FONTIN SC")
+			tooltip:AddLine(fontSizeBig, "^x7F7F7F"..tr("item.tooltip.requires", "Requires").." "..table.concat(req, "^x7F7F7F, "), "FONTIN SC")
 			tooltip:AddSeparator(10)
 		end
 		wipeTable(req)

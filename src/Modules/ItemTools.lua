@@ -11,6 +11,12 @@ local m_floor = math.floor
 
 itemLib = { }
 
+local function normaliseLocalizedLine(line)
+	return line
+		:gsub("\r", "")
+		:gsub("%-?%d+%.?%d*", "#")
+end
+
 -- Info table for all types of item influence
 itemLib.influenceInfo = {
 	["all"] = {
@@ -122,11 +128,46 @@ function itemLib.applyRange(line, range, valueScalar)
 	return itemLib.applyValueScalar(line, valueScalar, numbers, precision)
 end
 
+function itemLib.getDisplayTitle(item)
+	return item.displayTitle or item.title
+end
+
+function itemLib.getDisplayBaseName(item)
+	if item.displayBaseName then
+		return item.displayBaseName
+	end
+	if item.base and item.base.displayName then
+		return item.base.displayName
+	end
+	return item.baseName
+end
+
+function itemLib.localiseModLine(line)
+	local lineMap = data and data.localizedModLineMap
+	if not lineMap or not line then
+		return line
+	end
+	local translated = lineMap[line] or lineMap[normaliseLocalizedLine(line)]
+	if not translated then
+		return line
+	end
+	local values = { }
+	line:gsub("%-?%d+%.?%d*", function(value)
+		t_insert(values, value)
+	end)
+	local index = 0
+	return translated:gsub("#", function()
+		index = index + 1
+		return values[index] or "#"
+	end)
+end
+
 function itemLib.formatModLine(modLine, dbMode)
 	local line = (not dbMode and modLine.range and itemLib.applyRange(modLine.line, modLine.range, modLine.valueScalar)) or modLine.line
 	if line:match("^%+?0%%? ") or (line:match(" %+?0%%? ") and not line:match("0 to [1-9]")) or line:match(" 0%-0 ") or line:match(" 0 to 0 ") then -- Hack to hide 0-value modifiers
 		return
 	end
+	line = modLine.displayLine or itemLib.localiseModLine(line)
 	local colorCode
 	if modLine.extra then
 		colorCode = colorCodes.UNSUPPORTED
